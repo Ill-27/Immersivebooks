@@ -1,0 +1,44 @@
+name: Prepare standalone Artivid
+on:
+  push:
+    branches: [main]
+    paths: [site-release.json]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: artivid-site-import
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read reviewed material source
+        id: source
+        run: |
+          python - <<'PY'
+          import json, os
+          data=json.load(open('site-release.json'))
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:output.write('sha='+data['sourceCommit']+'\n')
+          PY
+      - uses: actions/checkout@v4
+        with:
+          repository: Ill-27/Syolana-n
+          ref: ${{ steps.source.outputs.sha }}
+          path: import-source
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare independent books and reading assets
+        run: python scripts/prepare-site.py import-source
+      - name: Save the prepared static website
+        run: |
+          git config user.name 'Artivid'
+          git config user.email 'artivid@users.noreply.github.com'
+          git add index.html books covers audio-library assets styles.css flight.js scene-audio.js utils.js robots.txt .nojekyll
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish independent books and reading assets'
+            git push origin HEAD:main
+          fi
