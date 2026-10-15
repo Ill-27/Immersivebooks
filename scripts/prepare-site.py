@@ -5,16 +5,16 @@ import json, re, shutil, sys
 root=Path(__file__).resolve().parents[1]
 source=Path(sys.argv[1]).resolve()
 original=source/'artivid'
+page=(root/'index.html').read_text()
+if '/artivid/' not in page and 'Сайт создан на Syolana' in page:
+    print('The independent reading entry is already prepared.')
+    raise SystemExit(0)
 for directory in ('books','covers','audio-library','assets'):
     shutil.copytree(original/directory,root/directory,dirs_exist_ok=True)
 for name in ('flight.js','scene-audio.js','utils.js'):
     shutil.copy2(source/name,root/name)
 shutil.copy2(source/'assets/logo.svg',root/'assets/syolana-logo.svg')
 (root/'styles.css').write_text((original/'styles.css').read_text())
-page=(root/'index.html').read_text()
-if '/artivid/' not in page and 'Сайт создан на Syolana' in page:
-    print('The independent reading entry is already prepared.')
-    raise SystemExit(0)
 bootstrap="window.__syolanaAssetBase=new URL('./',document.baseURI).href;window.__syolanaAssetReady=Promise.resolve(window.__syolanaAssetBase);"
 page,count=re.subn(r'<script>window\.__syolanaAssetReady=.*?</script>','<script>'+bootstrap+'</script>',page,count=1,flags=re.S)
 assert count==1,'Unexpected original entry page'
