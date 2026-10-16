@@ -6,6 +6,10 @@ root=Path(__file__).resolve().parents[1]
 source=Path(sys.argv[1]).resolve()
 original=source/'artivid'
 page=(root/'index.html').read_text()
+if 'licensed-reading-theme.mjs' in page:
+    assert (root/'licensed-reading-theme.mjs').is_file(), 'Missing registered design loader'
+    print('Registered reading entry is already prepared.')
+    raise SystemExit(0)
 if '/artivid/' not in page and 'Сайт создан на Syolana' in page:
     print('The independent reading entry is already prepared.')
     raise SystemExit(0)
